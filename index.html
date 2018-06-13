@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>RECEIPT BOT</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<script>
+    var socket = io.connect();
+        socket.on('messages', function(data) {
+        document.getElementById("result").innerHTML = data.extractedText;
+
+        document.getElementById('emptyDiv').style.display = "none";
+        document.getElementById('loader').style.display = "none";
+        document.getElementById('resultDiv').style.display = "block";
+        document.getElementById('resultImageDiv').style.display = "block";
+
+        document.getElementById('contentUploadDiv').style.display = "none";
+
+
+        var resultImage = document.getElementById('resultImage');
+        var selectedImage = document.getElementById('selectedImage');
+        resultImage.src = selectedImage.src;
+    });
+</script>
+
+<body style="background-color:#C9F9FF">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.8;
+        }
+
+        .materialDiv {
+            border-radius: 2px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+        }
+    </style>
+    <div class="jumbotron text-center" style="background-color:#4F5D75;color:white">
+        <h1>Receipt Bot</h1>
+        <p>Ease your Expenses!</p>
+    </div>
+
+    <div class="container">
+        <div class="row" style="padding:3%;">
+            <div class="col-lg-4" id="emptyDiv">
+
+            </div>
+            <div class="col-lg-4" id="resultImageDiv" style="display:none;text-align:center;">
+                <img src='' id="resultImage" width="250px" height="250px"></img>
+            </div>
+            <div class="col-lg-4 materialDiv" style="padding:3%;text-align:center;" id="contentUploadDiv" name="contentUploadDiv">
+                <div id="browseDiv" name="browseDiv" class="materialDiv" style="background-color:#4F5D75;padding:10px;text-align:center;font-size:14px;color:white;font-weight:bold;cursor:pointer;margin-left:20px;margin-right:20px;" onclick="browseFile();"><span class="glyphicon glyphicon-search"></span>&nbsp;&nbsp;Browse File</div>
+
+                <div id="contentUpload" name="contentUpload" style="display:none;">
+
+                    <br>
+                    <img class="materialDiv" src='' width="150px" height="150px" id="selectedImage" name="selectedImage"></img>
+                    <br><br>
+
+
+                    <div style="text-align:center;" id="buttonDiv" name="buttonDiv">
+                        <div class="materialDiv" style="background-color:#56282D;padding:10px;text-align:center;font-size:14px;color:white;font-weight:bold;float:left;width:50%;cursor:pointer;" onclick="removeContentUpload();"> <span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove </div>
+                        <div class="materialDiv" style="background-color:#77966D;padding:10px;text-align:center;font-size:14px;color:white;font-weight:bold;cursor:pointer;" onclick="submitImage();"><span class="glyphicon glyphicon-upload"></span>&nbsp;&nbsp; Upload </div>
+
+                    </div>
+                    <br>
+                    <i id="loader" class="fa fa-spinner fa-spin" style="font-size:34px;color:#4F5D75;display:none;"></i>
+                </div>
+            </div>
+            <div class="col-lg-8" style="padding:3%;text-align:center;display:none;" id="resultDiv">
+                <div>
+                    <div class="materialDiv" style="width:120px;float:left;background-color:#56282D;padding:10px;text-align:center;font-size:14px;color:white;font-weight:bold;cursor:pointer;">Result</div>
+                    <div class="materialDiv" style="width:180px;background-color:#4F5D75;padding:10px;text-align:center;font-size:14px;color:white;font-weight:bold;cursor:pointer;float:right;" onclick="window.location.reload(true);"><span class="glyphicon glyphicon-repeat"></span>&nbsp;&nbsp;Upload new image</div>
+                </div>
+                <br><br>
+                <div class="materialDiv" id="result" name="result" style="padding:3%;text-align:center;font-size:17px;">
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="uploadForm" name="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileToUpload" name="fileToUpload" style="display:none;" accept='image/*' onchange='openFile(event)'>
+    </form>
+
+    <script>
+        function browseFile() {
+            $("#fileToUpload").click();
+        }
+        var openFile = function(event) {
+            var input = event.target;
+
+            var reader = new FileReader();
+            reader.onload = function() {
+                var dataURL = reader.result;
+                var output = document.getElementById('selectedImage');
+                output.src = dataURL;
+                document.getElementById('contentUpload').style.display = "block";
+
+            };
+            reader.readAsDataURL(input.files[0]);
+        };
+
+        var removeContentUpload = function() {
+            document.getElementById("fileToUpload").value = "";
+            document.getElementById('contentUpload').style.display = "none";
+
+        }
+
+        function submitImage() {
+
+            document.getElementById('loader').style.display = "block";
+            document.getElementById('browseDiv').style.display = "none";
+            document.getElementById('buttonDiv').style.display = "none";
+
+            var reader = new FileReader();
+            //When the file has been read...
+            reader.onload = function(evt) {
+                //console.log(evt.target.result)
+                var data = {
+                    imageData: evt.target.result
+                }
+                socket.emit('processReceipt', data);
+            };
+            //And now, read the image and base64
+            var fileToUpload = document.querySelector("#fileToUpload");
+            reader.readAsDataURL(fileToUpload.files[0]);
+
+        }
+    </script>
+
+</body>
+
+<footer style="text-align:center;">
+    <p>Maintained by Prashant Gupta under Cloudadic Inc.<a href="https://www.linkedin.com/in/cloudadicbalaji/"> by Kannaiyan Balaji</a> <br>OCR module credits: <a href="https://www.linkedin.com/in/prashantgpt91/">Prashant Gupta</a> | <a href="https://github.com/rayush7">Ayush Rai</a> | <a href="https://www.linkedin.com/in/vijay-singh-rajpurohit-a966298b/">Vijay Rajpurohit</a> <br> Web credits: <a href="https://www.linkedin.com/in/srinivasan-lakshmanan-a9120344/">Srinivasan Lakshmanan</a></p>
+</footer>
+
+
+</html>
