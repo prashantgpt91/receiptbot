@@ -1,8 +1,8 @@
 # README #
 This README would normally document whatever steps are necessary to get this application up and running.
+
 ### What is this repository for? ###
-*Node application
-*Landing website for Receiptbot Application
+*Node application Landing website for Receiptbot Application*
 
 ### Steps to follow run in local ###
 
@@ -25,4 +25,3 @@ Start - "sudo service receiptbot  start"
 Stop - "sudo service receiptbot  stop" 
 Status - "sudo service receiptbot status" 
 Restart - "sudo service receiptbot  restart" 
-* Now open www.receiptbot.com/ http://ec2-34-199-46-132.compute-1.amazonaws.com:86/ to check the updates.
